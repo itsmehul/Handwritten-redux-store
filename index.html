@@ -15,20 +15,20 @@
       // 4. Update the state
 
       let state
-      let listeners = []
+      let listeners = []//stores callbacks to be called on list iteration
 
-      const getState = () => state
+      const getState = () => state//returns state object
 
       const subscribe = (listener) => {
         listeners.push(listener)
         return () => {
-          listeners = listeners.filter((l) => l !== listener)
+          listeners = listeners.filter((l) => l !== listener)//ensures uniqueness of callbacks(removes duplicate subscriptions)
         }
-      }
+      }//pushes new callback whenever we subscribe with one
 
       const dispatch = (action) => {
-        state = reducer(state, action)
-        listeners.forEach((listener) => listener())
+        state = reducer(state, action)//passes the action to every reducer defined along with current state
+        listeners.forEach((listener) => listener())//list iteration on dispatch
       }
 
       return {
@@ -39,6 +39,8 @@
     }
 
     // App Code
+
+    //***ACTIONS_POSS_TO_FIRE***
     const ADD_TODO = 'ADD_TODO'
     const REMOVE_TODO = 'REMOVE_TODO'
     const TOGGLE_TODO = 'TOGGLE_TODO'
@@ -80,6 +82,7 @@
       }
     }
 
+    //***REDUCERS***
     function todos (state = [], action) {
       switch(action.type) {
         case ADD_TODO :
@@ -105,6 +108,7 @@
       }
     }
 
+    //only the reducer that matches the action will get fired
     function app (state = {}, action) {
       return {
         todos: todos(state.todos, action),
@@ -112,12 +116,13 @@
       }
     }
 
-    const store = createStore(app)
+    const store = createStore(app)//pass definitions of all reducers to be scoped
 
     store.subscribe(() => {
       console.log('The new state is: ', store.getState())
     })
 
+    //When we trigger a change in the store, the 'action' is implicitly defined
     store.dispatch(addTodoAction({
       id: 0,
       name: 'Walk the dog',
