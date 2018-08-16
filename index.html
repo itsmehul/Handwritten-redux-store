@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Udacity Todos Goals</title>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js'></script>
 </head>
 <body>
   <div>
@@ -21,39 +22,6 @@
       return Math.random().toString(36).substring(2) + (new Date()).getTime().toString(36);
     }
 
-    // Library Code
-    function createStore (reducer) {
-      // The store should have four parts
-      // 1. The state
-      // 2. Get the state.
-      // 3. Listen to changes on the state.
-      // 4. Update the state
-
-      let state
-      let listeners = []//stores callbacks to be called on list iteration
-
-      const getState = () => state//returns state object
-
-      const subscribe = (listener) => {
-        listeners.push(listener)
-        return () => {
-          listeners = listeners.filter((l) => l !== listener)//ensures uniqueness of callbacks(removes duplicate subscriptions)
-        }
-      }//pushes new callback whenever we subscribe with one
-
-      const dispatch = (action) => {
-        state = reducer(state, action)//passes the action to every reducer defined along with current state
-        listeners.forEach((listener) => listener())//list iteration on dispatch
-      }
-
-      return {
-        getState,
-        subscribe,
-        dispatch,
-      }
-    }
-
-    // App Code
 
     //***ACTIONS_POSS_TO_FIRE***
     const ADD_TODO = 'ADD_TODO'
@@ -123,15 +91,29 @@
       }
     }
 
-    //only the reducer that matches the action will get fired
-    function app (state = {}, action) {
-      return {
-        todos: todos(state.todos, action),
-        goals: goals(state.goals, action),
+//Performs a check before we dispatch the action
+    function checkAndDispatch (store, action) {
+      if (
+        action.type === ADD_TODO &&
+        action.todo.name.toLowerCase().includes('bitcoin')
+      ) {
+        return alert("Nope. That's a bad idea.")
       }
+
+      if (
+        action.type === ADD_GOAL &&
+        action.goal.name.toLowerCase().includes('bitcoin')
+      ) {
+        return alert("Nope. That's a bad idea.")
+      }
+
+      return store.dispatch(action)
     }
 
-    const store = createStore(app)//pass definitions of all reducers to be scoped
+    const store = Redux.createStore(Redux.combineReducers({
+      todos,
+      goals,
+    }))
 
     store.subscribe(() => {
       const { goals, todos } = store.getState()
@@ -149,7 +131,7 @@
       const name = input.value
       input.value = ''
 
-      store.dispatch(addTodoAction({
+      checkAndDispatch(store, addTodoAction({
         name,
         complete: false,
         id: generateId()
@@ -161,7 +143,7 @@
       const name = input.value
       input.value = ''
 
-      store.dispatch(addGoalAction({
+      checkAndDispatch(store, addGoalAction({
         id: generateId(),
         name,
       }))
@@ -185,14 +167,14 @@
       const text = document.createTextNode(todo.name)
 
       const removeBtn = createRemoveButton(() => {
-        store.dispatch(removeTodoAction(todo.id))
+        checkAndDispatch(store, removeTodoAction(todo.id))
       })
 
       node.appendChild(text)
       node.appendChild(removeBtn)
       node.style.textDecoration = todo.complete ? 'line-through' : 'none'
       node.addEventListener('click', () => {
-        store.dispatch(toggleTodoAction(todo.id))
+        checkAndDispatch(store, toggleTodoAction(todo.id))
       })
 
       document.getElementById('todos')
@@ -203,7 +185,7 @@
       const node = document.createElement('li')
       const text = document.createTextNode(goal.name)
       const removeBtn = createRemoveButton(() => {
-        store.dispatch(removeGoalAction(goal.id))
+        checkAndDispatch(store, removeGoalAction(goal.id))
       })
 
       node.appendChild(text)
